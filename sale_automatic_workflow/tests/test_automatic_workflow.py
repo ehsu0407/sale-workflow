@@ -44,7 +44,7 @@ class TestAutomaticWorkflow(TestAutomaticWorkflowBase):
     def test_date_invoice_from_sale_order(self):
         workflow = self.create_full_automatic()
         # date_order on sale.order is date + time
-        # date_invoice on account.invoice is date only
+        # date_invoice on account.move is date only
         last_week_time = fields.Datetime.now() - timedelta(days=7)
         override = {
             'date_order': last_week_time,

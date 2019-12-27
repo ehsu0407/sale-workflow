@@ -63,12 +63,12 @@ class AutomaticWorkflowJob(models.Model):
             with savepoint(self.env.cr), force_company(self.env,
                                                        sale.company_id):
                 payment = self.env['sale.advance.payment.inv'].create(
-                    {'advance_payment_method': 'all'})
+                    {'advance_payment_method': 'delivered'})
                 payment.with_context(active_ids=sale.ids).create_invoices()
 
     @api.model
     def _validate_invoices(self, validate_invoice_filter):
-        invoice_obj = self.env['account.invoice']
+        invoice_obj = self.env['account.move']
         invoices = invoice_obj.search(validate_invoice_filter)
         _logger.debug('Invoices to validate: %s', invoices.ids)
         for invoice in invoices:
@@ -77,7 +77,7 @@ class AutomaticWorkflowJob(models.Model):
                 # FIX Why is this needed for certain invoices
                 # in enterprise in multicompany?
                 invoice.with_context(
-                    force_company=invoice.company_id.id).action_invoice_open()
+                    force_company=invoice.company_id.id).action_post()
 
     @api.model
     def _validate_pickings(self, picking_filter):
