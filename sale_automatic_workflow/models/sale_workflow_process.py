@@ -48,6 +48,11 @@ class SaleWorkflowProcess(models.Model):
         string='Validate Invoice Filter Domain',
         related='validate_invoice_filter_id.domain',
     )
+    register_payment_invoice = fields.Boolean(string='Register Payment Invoice')
+    register_payment_invoice_filter_domain = fields.Text(
+        string='Register Payment Invoice Filter Domain',
+        related='register_payment_invoice_filter_id.domain',
+    )
     validate_picking = fields.Boolean(string='Confirm and Transfer Picking')
     picking_filter_domain = fields.Text(
         string='Picking Filter Domain',
@@ -84,6 +89,13 @@ class SaleWorkflowProcess(models.Model):
         string='Sales Journal',
         help='Set default journal to use on invoice'
     )
+    payment_journal_id = fields.Many2one(
+        comodel_name='account.journal',
+        company_dependent=True,
+        string='Payment Journal',
+        domain="[('type','in',('bank','cash'))]",
+        help='Set journal to use on invoice payments'
+    )
     order_filter_id = fields.Many2one(
         'ir.filters',
         string='Order Filter',
@@ -111,6 +123,14 @@ class SaleWorkflowProcess(models.Model):
         default=lambda self: self._default_filter(
             'sale_automatic_workflow.'
             'automatic_workflow_validate_invoice_filter'
+        )
+    )
+    register_payment_invoice_filter_id = fields.Many2one(
+        'ir.filters',
+        string='Register Payment Invoice Filter',
+        default=lambda self: self._default_filter(
+            'sale_automatic_workflow.'
+            'automatic_workflow_register_payment_invoice_filter'
         )
     )
     sale_done_filter_id = fields.Many2one(

@@ -80,6 +80,33 @@ class AutomaticWorkflowJob(models.Model):
                     force_company=invoice.company_id.id).action_post()
 
     @api.model
+    def _register_payment_invoices(self, sale_workflow, register_payment_filter):
+        invoice_obj = self.env['account.move']
+        invoices = invoice_obj.search(register_payment_filter)
+        _logger.debug('Invoices to register payment: %s', invoices.ids)
+        for invoice in invoices:
+            with savepoint(self.env.cr), force_company(self.env, invoice.company_id):
+                Payment = self.env['account.payment']
+                values = Payment.with_context(
+                    active_ids=invoice.ids,
+                    active_model='account.move',
+                    active_id=invoice.id
+                ).default_get([])
+                values.update({
+                    'journal_id': sale_workflow.payment_journal_id.id,
+                    'payment_date': invoice.invoice_date,
+                })
+                specs = Payment._onchange_spec()
+                updates = Payment.onchange(values, ['journal_id'], specs)
+                value = updates.get('value', {})
+                for name, val in value.items():
+                    if isinstance(val, tuple):
+                        value[name] = val[0]
+                values.update(value)
+                payment = Payment.create(values)
+                payment.post()
+
+    @api.model
     def _validate_pickings(self, picking_filter):
         picking_obj = self.env['stock.picking']
         pickings = picking_obj.search(picking_filter)
@@ -118,6 +145,12 @@ class AutomaticWorkflowJob(models.Model):
                 safe_eval(
                     sale_workflow.validate_invoice_filter_id.domain) +
                 workflow_domain)
+        if sale_workflow.register_payment_invoice:
+            self._register_payment_invoices(
+                sale_workflow,
+                safe_eval(sale_workflow.register_payment_invoice_filter_id.domain) +
+                workflow_domain
+            )
         if sale_workflow.sale_done:
             self._sale_done(
                 safe_eval(
