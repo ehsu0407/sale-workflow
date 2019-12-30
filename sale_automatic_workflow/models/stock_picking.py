@@ -14,6 +14,7 @@ class StockPicking(models.Model):
         comodel_name="sale.workflow.process",
         string="Sale Workflow Process",
         related="sale_id.workflow_process_id",
+        store=True,
     )
 
     def validate_picking(self):
