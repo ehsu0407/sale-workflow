@@ -66,6 +66,7 @@ class AutomaticWorkflowJob(models.Model):
                     {'advance_payment_method': 'delivered'})
                 payment.with_context(
                     active_ids=sale.ids,
+                    force_company=sale.company_id.id,
                     default_company_id=sale.company_id.id
                 ).create_invoices()
 
