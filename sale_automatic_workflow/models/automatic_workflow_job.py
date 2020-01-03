@@ -64,7 +64,10 @@ class AutomaticWorkflowJob(models.Model):
                                                        sale.company_id):
                 payment = self.env['sale.advance.payment.inv'].create(
                     {'advance_payment_method': 'delivered'})
-                payment.with_context(active_ids=sale.ids).create_invoices()
+                payment.with_context(
+                    active_ids=sale.ids,
+                    default_company_id=sale.company_id.id
+                ).create_invoices()
 
     @api.model
     def _validate_invoices(self, validate_invoice_filter):
