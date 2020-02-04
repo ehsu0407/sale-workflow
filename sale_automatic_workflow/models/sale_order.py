@@ -39,7 +39,6 @@ class SaleOrder(models.Model):
         workflow = self.workflow_process_id
         if not workflow:
             return invoice_vals
-        invoice_vals['workflow_process_id'] = workflow.id
         if workflow.invoice_date_is_order_date:
             invoice_vals['invoice_date'] = (
                 fields.Date.context_today(self, self.date_order)
