@@ -55,11 +55,17 @@ class AutomaticWorkflowJob(models.Model):
                 sale.action_confirm()
 
     @api.model
-    def _create_invoices(self, create_filter):
+    def _create_invoices(self, sale_workflow, create_filter):
         sale_obj = self.env['sale.order']
         sales = sale_obj.search(create_filter)
         _logger.debug('Sale Orders to create Invoice: %s', sales.ids)
         for sale in sales:
+            if sale_workflow.only_create_invoices_if_none_exist:
+                # Check if invoices exist before creating
+                if sale.invoice_count > 0:
+                    # Invoices already exist
+                    continue
+
             with savepoint(self.env.cr), force_company(self.env,
                                                        sale.company_id):
                 payment = self.env['sale.advance.payment.inv'].create(
@@ -142,6 +148,7 @@ class AutomaticWorkflowJob(models.Model):
                 workflow_domain)
         if sale_workflow.create_invoice:
             self._create_invoices(
+                sale_workflow,
                 safe_eval(sale_workflow.create_invoice_filter_id.domain) +
                 workflow_domain)
         if sale_workflow.validate_invoice:

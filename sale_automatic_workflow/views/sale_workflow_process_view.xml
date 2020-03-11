@@ -137,6 +137,7 @@
                 <group name="invoice_options">
                     <field name="invoice_date_is_order_date"/>
                     <field name="invoice_service_delivery" />
+                    <field name="only_create_invoices_if_none_exist" />
                     <field name="property_journal_id" groups="account.group_account_invoice"
                            domain="[('type', '=', 'sale')]"/>
                     <field name="payment_journal_id" groups="account.group_account_invoice"/>
