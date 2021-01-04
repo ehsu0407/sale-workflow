@@ -10,25 +10,33 @@ _logger = logging.getLogger(__name__)
 
 def pre_init_hook(cr):
     _logger.info("Create discount columns in database")
+    # Use IF NOT EXISTS to alter table because when the module is already
+    # installed (v9.0 for example) and you migrate to this 13.0, the column
+    # already exists but the module is considered as new.
+    # So this hook is triggered and it raise an exception.
     cr.execute(
         """
-        ALTER TABLE sale_order ADD COLUMN price_total_no_discount numeric;
+        ALTER TABLE sale_order
+        ADD COLUMN IF NOT EXISTS price_total_no_discount numeric;
     """
     )
     cr.execute(
         """
-        ALTER TABLE sale_order ADD COLUMN discount_total numeric;
+        ALTER TABLE sale_order
+        ADD COLUMN IF NOT EXISTS discount_total numeric;
     """
     )
     cr.execute(
         """
-        ALTER TABLE sale_order_line ADD COLUMN price_total_no_discount
+        ALTER TABLE sale_order_line
+        ADD COLUMN IF NOT EXISTS price_total_no_discount
         numeric;
     """
     )
     cr.execute(
         """
-        ALTER TABLE sale_order_line ADD COLUMN discount_total numeric;
+        ALTER TABLE sale_order_line
+        ADD COLUMN IF NOT EXISTS discount_total numeric;
     """
     )
 
@@ -58,4 +66,4 @@ def post_init_hook(cr, registry):
     order_ids = cr.fetchall()
 
     orders = env["sale.order"].search([("id", "in", order_ids)])
-    orders.mapped("order_line")._compute_discount()
+    orders.mapped("order_line")._update_discount_display_fields()
